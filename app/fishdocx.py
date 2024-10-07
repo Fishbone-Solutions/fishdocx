@@ -12,6 +12,50 @@ import streamlit as st
 from pathlib import Path
 from pypdf import PdfWriter
 
+import base64
+
+# Set page configuration
+st.set_page_config(layout="wide")  # Set wide layout to utilize the full screen
+
+# Function to load image and encode it to base64
+def load_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
+# Load and encode the train image
+encoded_image = load_image("image.png")
+
+# Custom CSS to animate the image
+st.markdown(
+    f"""
+    <style>
+    @keyframes slideIn {{
+        0% {{
+            transform: translateX(-100%);
+        }}
+        100% {{
+            transform: translateX(100%);
+        }}
+    }}
+    .header-img {{
+        animation: slideIn 20s linear infinite;
+        width: 100%;
+        height: auto;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Add the animated image to the header
+st.markdown(
+    f"""
+    <div style="position: relative; width: 100%; overflow: hidden;">
+        <img src="data:image/png;base64,{encoded_image}" class="header-img" alt="Header Image">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 file_dispatch_worker = []
 st.header(' FISH DOCX 🪝🐟')
