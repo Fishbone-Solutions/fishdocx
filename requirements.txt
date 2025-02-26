@@ -1,2 +1,2 @@
 streamlit
-pyodbc
+pyodbc==5.0.0
