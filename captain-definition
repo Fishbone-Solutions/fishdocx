@@ -1,12 +1,19 @@
 {
   "schemaVersion": 2,
   "dockerfileLines": [
-"FROM tiangolo/meinheld-gunicorn:python3.9",
-"COPY requirements.txt /tmp/requirements.txt",
-"RUN pip3 install --no-cache-dir -r /tmp/requirements.txt",
-"COPY ./app /app",
-"EXPOSE 80",
-"COPY ./utils/run.sh /utils/run.sh",
-"CMD sh /utils/run.sh"   
-]
+  "FROM tiangolo/meinheld-gunicorn:python3.9",
+  "USER root",
+  "RUN apt-get update && apt-get install -y curl gnupg2 apt-transport-https unixodbc unixodbc-dev && \\",
+  "    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \\",
+  "    curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/microsoft-prod.list && \\",
+  "    apt-get update && \\",
+  "    ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \\",
+  "    rm -rf /var/lib/apt/lists/*",
+  "COPY requirements.txt /tmp/requirements.txt",
+  "RUN pip3 install --no-cache-dir -r /tmp/requirements.txt",
+  "COPY ./app /app",
+  "COPY ./utils/run.sh /utils/run.sh",
+  "EXPOSE 80",
+  "CMD sh /utils/run.sh"
+  ]
 }
