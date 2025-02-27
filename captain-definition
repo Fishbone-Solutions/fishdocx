@@ -3,17 +3,21 @@
   "dockerfileLines": [
   "FROM tiangolo/meinheld-gunicorn:python3.9",
   "USER root",
-  "RUN apt-get update && apt-get install -y curl gnupg2 apt-transport-https unixodbc unixodbc-dev && \\",
+  "RUN apt-get update && apt-get install -y curl gnupg2 apt-transport-https unixodbc unixodbc-dev openvpn iptables && \\",
   "    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \\",
   "    curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/microsoft-prod.list && \\",
   "    apt-get update && \\",
   "    ACCEPT_EULA=Y apt-get install -y msodbcsql17 && \\",
   "    rm -rf /var/lib/apt/lists/*",
+  "COPY ./vpn/config.ovpn /etc/openvpn/config.ovpn",
+  "COPY ./vpn/credentials.txt /etc/openvpn/credentials.txt",
   "COPY requirements.txt /tmp/requirements.txt",
   "RUN pip3 install --no-cache-dir -r /tmp/requirements.txt",
   "COPY ./app /app",
   "COPY ./utils/run.sh /utils/run.sh",
+  "COPY ./utils/vpn-startup.sh /utils/vpn-startup.sh",
+  "RUN chmod +x /utils/vpn-startup.sh",
   "EXPOSE 80",
-  "CMD sh /utils/run.sh"
+  "CMD [\"/utils/vpn-startup.sh\"]"
   ]
 }
