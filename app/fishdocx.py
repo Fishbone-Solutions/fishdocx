@@ -1,53 +1,92 @@
+#!/usr/bin/python
+
+'''
+/**
+ * Author:    Mohammed Saifullah
+ * Created:   11.05.2022
+ * 
+ * (c) Copyright by Fishbone Solutions
+ **/
+'''
 import streamlit as st
-import pyodbc
+from pathlib import Path
+from pypdf import PdfWriter
 
-def get_tables(server, database, username, password):
-    # Build connection string
-    conn_str = (
-        f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-        f"SERVER={server};"
-        f"DATABASE={database};"
-        f"UID={username};"
-        f"PWD={password};"
+import base64
+
+# Set page configuration
+st.set_page_config(layout="wide")  # Set wide layout to utilize the full screen
+
+# Function to load image and encode it to base64
+def load_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
+# Load and encode the train image
+encoded_image = load_image("image.png")
+
+# Custom CSS to animate the image
+st.markdown(
+    f"""
+    <style>
+    @keyframes slideIn {{
+        0% {{
+            transform: translateX(-100%);
+        }}
+        100% {{
+            transform: translateX(100%);
+        }}
+    }}
+    .header-img {{
+        animation: slideIn 20s linear infinite;
+        width: 100%;
+        height: auto;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Add the animated image to the header
+st.markdown(
+    f"""
+    <div style="position: relative; width: 100%; overflow: hidden;">
+        <img src="data:image/png;base64,{encoded_image}" class="header-img" alt="Header Image">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+file_dispatch_worker = []
+st.header(' FISH DOCX 🪝🐟')
+ptest = "archive/"
+uploaded_files = st.file_uploader(
+    "Choose a File", accept_multiple_files=True, type=['pdf'])
+for uploaded_file in uploaded_files:
+    bytes_data = uploaded_file.read()
+    st.write("filename:", uploaded_file.name)
+    Path(ptest).mkdir(parents=True, exist_ok=True)
+    f = open(ptest + str(uploaded_file.name), "wb")
+    f.write(bytes_data)
+    f.close()
+    file_dispatch_worker.append(ptest+uploaded_file.name)
+merger = PdfWriter()
+for pdf in file_dispatch_worker:
+    merger.append(pdf)
+
+merger.write("archive/merged-pdf.pdf")
+merger.close()
+with open("archive/merged-pdf.pdf", "rb") as file:
+    btn = st.download_button(
+        label="Generate PDF",
+        data=file,
+        file_name="dowloaded.pdf",
+        mime="application/octet-stream"
     )
-    
-    # Connect to Azure SQL
-    with pyodbc.connect(conn_str) as conn:
-        cursor = conn.cursor()
-        
-        # Query to get list of tables (via INFORMATION_SCHEMA)
-        cursor.execute("SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE';")
-        
-        # Fetch all tables
-        tables_data = cursor.fetchall()
-        
-        # Convert to a list of tuples or list of dicts
-        tables_list = [f"{row[0]}.{row[1]}" for row in tables_data]
-        
-    return tables_list
-
-def main():
-    st.title("Azure Sandbox Test")
-    
-    # Collect Azure SQL credentials (for demonstration; in a real app you’d store these securely)
-    server = st.text_input("Azure SQL Server (e.g. yourserver.database.windows.net)")
-    database = st.text_input("Database Name")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-
-    if st.button("List Tables"):
-        if server and database and username and password:
-            try:
-                tables = get_tables(server, database, username, password)
-                if tables:
-                    st.write("**Tables found in the database:**")
-                    st.table(tables)
-                else:
-                    st.write("No tables found or insufficient permissions.")
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-        else:
-            st.warning("Please fill in all required fields.")
-
-if __name__ == "__main__":
-    main()
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
