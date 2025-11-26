@@ -1,0 +1,11 @@
+FROM tiangolo/meinheld-gunicorn:python3.9
+
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+
+COPY ./app /app
+
+EXPOSE 80
+
+COPY ./utils/run.sh /utils/run.sh
+CMD sh /utils/run.sh
